@@ -171,6 +171,48 @@ def optimise_constellation(grids, num_satellites_range, num_planes_range, altitu
     return best_config, best_coverage, results
 
 
+def generate_debris(num_debris, min_altitude, max_altitude):
+    """
+    Generate random debris positions in space between specified altitudes.
+
+    INPUTS
+    num_debris: Number of debris that will be simulated
+    min_altitude: Minimum altitude at which we want them to be
+    max_altitude: Maximum altitude at which we want them to be
+
+    OUTPUTS
+    debris : List containing the characteristics of each debris
+            position
+            volume
+            density
+            coverage (initialise at 0)
+    """
+    debris = []
+    for _ in range(num_debris):
+        #Random altitude
+        altitude = np.random.uniform(min_altitude, max_altitude)
+
+        #Random position on the sphere (longitude, latitude)
+        theta = np.random.uniform(0, 2 * np.pi)
+        phi = np.random.uniform(0, np.pi)
+
+        #Convert spherical coordinates to Cartesian coordinates
+        x = (EARTH_RADIUS + altitude) * np.sin(phi) * np.cos(theta)
+        y = (EARTH_RADIUS + altitude) * np.sin(phi) * np.sin(theta)
+        z = (EARTH_RADIUS + altitude) * np.cos(phi)
+
+        volume = np.random.uniform(0.5, 1.5)  #Volume between 0.5 and 1.5 units NEED TO CHECK !!!
+        density = np.random.uniform(1e-5, 5e-5)  #Density between 1e-5 and 5e-5 NEED TO CHECK !!!
+
+        debris.append({
+            'position': [x, y, z],
+            'volume': volume,
+            'density': density,
+            'coverage': 0
+        })
+
+    return debris
+
 def simulate_optimisation():
     """
     Define example grids and parameter ranges for the satellite constellation.
@@ -180,29 +222,25 @@ def simulate_optimisation():
     results : A list of all configurations tested along with their coverage performance
     """
     #Example grids
-    grids = [
-        {'position': [7000, 0, 0], 'volume': 1, 'density': 1e-5, 'coverage': 0},
-        {'position': [7050, 50, 0], 'volume': 1, 'density': 2e-5, 'coverage': 0},
-        {'position': [7100, 0, 50], 'volume': 1, 'density': 1e-5, 'coverage': 0},
-    ]
+    grids = generate_debris(3, 600, 800)
 
     #Parameter ranges
-    num_satellites_range = [12, 15, 18, 21, 24]  # Total number of satellites
-    num_planes_range = [3, 4, 5, 6]  # Number of orbital planes
-    altitudes = [600, 700, 800]  # Altitude in km
-    inclinations = [90, 95, 98.5]  # Inclination in degrees
+    num_satellites_range = [12, 15, 18, 21, 24]  #Total number of satellites
+    num_planes_range = [3, 4, 5, 6]  #Number of orbital planes
+    altitudes = [600, 700, 800]  #Altitude in km
+    inclinations = [90, 95, 98.5]  #Inclination in degrees
 
     #Optimise
     best_config, best_coverage, results = optimise_constellation(
         grids, num_satellites_range, num_planes_range, altitudes, inclinations
     )
 
-    print("Best Configuration:")
+    print("Best configuration:")
     print(f"  Satellites: {best_config[0]}")
-    print(f"  Orbital Planes: {best_config[1]}")
+    print(f"  Orbital planes: {best_config[1]}")
     print(f"  Altitude: {best_config[2]} km")
     print(f"  Inclination: {best_config[3]}°")
-    print(f"  Coverage Performance: {best_coverage:.4f}")
+    print(f"  Coverage performance: {best_coverage:.4f}")
 
     return results
 
@@ -244,6 +282,6 @@ def plot_results(results):
     plt.grid()
     plt.show()
 
-if __name__ == "__main__":
+if __name__ == "__main__": #Will run code if apple file has its name
     results = simulate_optimisation()
     plot_results(results)
